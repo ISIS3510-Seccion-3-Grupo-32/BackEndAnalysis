@@ -1,11 +1,23 @@
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
 def classify_crime(description):
     keywords = {
-        "felonies": ["serious crime", "major offense"],
-        "misdemeanors": ["minor offense", "petty crime"],
-        "felony-misdemeanors": ["combination of major and minor"],
-        "infractions": ["minor violation", "traffic offense"]
+        "felonies": ["serious crime", "major offense", "capital offense", "high-level crime", "violent crime", "homicide", "robbery", "burglary", "kidnapping", "arson", "fraud", "drug trafficking", "assault", "grand theft"],
+        "misdemeanors": ["minor offense", "petty crime", "low-level crime", "non-violent crime", "shoplifting", "trespassing", "vandalism", "disorderly conduct", "simple assault", "possession of a controlled substance", "public intoxication"],
+        "felony-misdemeanors": ["combination of major and minor", "mixed-level crime", "hybrid offense", "moderate offense", "partially serious crime", "aggravated assault", "domestic violence", "theft with prior convictions", "property damage with prior convictions"],
+        "infractions": ["minor violation", "traffic offense", "civil offense", "non-criminal offense", "speeding ticket", "parking violation", "jaywalking", "noise violation", "littering", "running a red light", "failure to yield"]
     }
+
+    # Tokenize the input description using spaCy
+    doc = nlp(description.lower())
+
     for crime, keywords_list in keywords.items():
-        if any(keyword in description.lower() for keyword in keywords_list):
-            return crime
+        for keyword in keywords_list:
+            # Tokenize the keyword as well
+            keyword_tokens = nlp(keyword.lower())
+            if all(keyword_token.text in doc.text for keyword_token in keyword_tokens):
+                return crime
+
     return "unknown"
