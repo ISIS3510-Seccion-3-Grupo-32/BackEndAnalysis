@@ -1,1 +1,11 @@
-
+def classify_crime(description):
+    keywords = {
+        "felonies": ["serious crime", "major offense"],
+        "misdemeanors": ["minor offense", "petty crime"],
+        "felony-misdemeanors": ["combination of major and minor"],
+        "infractions": ["minor violation", "traffic offense"]
+    }
+    for crime, keywords_list in keywords.items():
+        if any(keyword in description.lower() for keyword in keywords_list):
+            return crime
+    return "unknown"
