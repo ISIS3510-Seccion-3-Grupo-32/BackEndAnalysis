@@ -1,1 +1,110 @@
+import nltk
+from bs4 import BeautifulSoup
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+processed_keywords = {
+    "crashes": ["crash", "forc", "close", "respond", "shut", "down", "abrupt", "exit"],
+    "freezing": ["freez", "hang", "unrespons","respons","respond", "stuck"],
+    "slow": ["slow", "laggi", "load", "sluggish", "delay"],
+    "UI/UX": ["ui", "ux", "interfac", "glitch", "button", "design", "unintuit"],
+    "functional":["error","work","should","function","broken"],
+    "network":["internet","connect","offlin","network"],
+    "battery":["batteri","drain","power","consumpt","life"],
+    "compatibility":["compat","devic","phone","version","OS","oper","system"],
+    "security":["breach","secur","safe","risk","access","privaci","polici","sensit"],
+    "data":["data","sync","lost","updat"],
+    "inputs":["keyboard","input","text","type","field","copi","past","write"]
+}
+
+@app.route('/process_sentence', methods=['POST'])
+def process_sentence():
+    data = request.get_json()
+    input_text = data['input_text']
+
+    # Your code for processing the sentence and finding the category goes here
+    most_common_category = findMostCommonCategory(input_text, processed_keywords)
+
+    return jsonify({"category": most_common_category})
+
+def getTokens(raw_doc):
+    tokenizer = nltk.RegexpTokenizer(r'\w+')
+    word_tok_nltk_en = tokenizer.tokenize(raw_doc)
+    return word_tok_nltk_en
+
+def getStemmed(tokenized):
+    p_stemmer = nltk.stem.porter.PorterStemmer()
+    stemmed_doc = [p_stemmer.stem(word) for word in tokenized]
+    return stemmed_doc
+
+def findMostCommonCategory(input_sentence, processed_keywords):
+    # Tokenize and stem the input sentence
+    input_tokens = getStemmed(getTokens(input_sentence))
+
+    # Initialize variables to keep track of the most common category and count
+    most_common_category = None
+    max_common_count = 0
+
+    for category, category_keywords in processed_keywords.items():
+        # Count the number of common words between input and category keywords
+        common_count = len(set(input_tokens).intersection(category_keywords))
+
+        # Update the most common category if a new category has more common words
+        if common_count > max_common_count:
+            max_common_count = common_count
+            most_common_category = category
+        
+    if most_common_category is None:
+        return "other"
+
+    return most_common_category
+
+# def processKeywords(keywords):
+#     processed_keywords = {}
+#     for category, words in keywords.items():
+#         tokenized_words = [getTokens(word) for word in words]
+#         stemmed_words = [getStemmed(tokenized) for tokenized in tokenized_words]
+#         flattened_stemmed_words = [word for sublist in stemmed_words for word in sublist]
+#         processed_keywords[category] = flattened_stemmed_words
+#     return processed_keywords
+
+if __name__ == "__main__":
+
+    app.run(host='localhost', port=3001)
+
+    # keywords = {
+    #     "crashes": ["crash", "force", "close", "responding", "shuts", "down", "abrupt", "exit"],
+    #     "freezing": ["freeze", "hang", "unresponsive", "stuck"],
+    #     "slow": ["slow", "laggy", "loading", "sluggish", "delayed"],
+    #     "UI/UX": ["UI", "UX", "interface", "glitch", "button", "design", "unintuitive"],
+    #     "functional":["error","working","should","function","broken"],
+    #     "network":["internet","connection","offline","network","connect"],
+    #     "battery":["battery","drain","power","consumption","life"],
+    #     "compatibility":["compatible","device","phone","version","OS","operating","system"],
+    #     "security":["breach","security","safe","risk","access","privacy","policy","sensitive"],
+    #     "data":["data","sync","lost","updating"],
+    #     "inputs":["keyboard","input","text","typing","copy-paste","fields","copy","paste","write"]
+    # }
+
+
+
+    # input_text = "The app drains my battery."
+    
+    # tokenized_text = getTokens(input_text)
+    # print("Tokenized text:", tokenized_text)
+
+    # stemmed_text = getStemmed(tokenized_text)
+    # print("Stemmed text:", stemmed_text)
+
+    # # processed_keywords = processKeywords(keywords)
+
+    # # for category, words in processed_keywords.items():
+    # #     print(f"{category}: {words}")
+
+    # most_common_category = findMostCommonCategory(input_text, processed_keywords)
+    # print(f"The most common category is: {most_common_category}")
+
+
 
